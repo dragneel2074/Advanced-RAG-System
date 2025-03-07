@@ -1,0 +1,11 @@
+streamlit
+langchain-ollama
+langchain
+langchain-community
+pdftext
+ollama
+pymongo
+python-dotenv
+uuid
+easyocr
+pillow 
