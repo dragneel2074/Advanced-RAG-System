@@ -8,4 +8,5 @@ pymongo
 python-dotenv
 uuid
 easyocr
-pillow 
+pillow
+neo4j 

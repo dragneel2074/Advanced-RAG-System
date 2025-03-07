@@ -1,6 +1,6 @@
-# RAG Chatbot with Document Indexing and OCR
+# RAG Chatbot with Document Indexing, OCR, and Knowledge Graph
 
-This application provides a chat interface with Retrieval-Augmented Generation (RAG) capabilities, document management, and OCR support for images.
+This application provides a chat interface with Retrieval-Augmented Generation (RAG) capabilities, document management, OCR support for images, and a Neo4j knowledge graph for message categorization.
 
 ## Features
 
@@ -10,6 +10,7 @@ This application provides a chat interface with Retrieval-Augmented Generation (
 - Chat history persistence with MongoDB
 - Vector search powered by Chroma
 - LLM integration with Ollama (llama3.2)
+- Knowledge Graph for message categorization with Neo4j
 
 ## Prerequisites
 
@@ -20,6 +21,30 @@ This application uses MongoDB to store chat history. Install MongoDB:
 - **Windows**: Download from [MongoDB Website](https://www.mongodb.com/try/download/community)
 - **Linux**: Follow [installation instructions](https://www.mongodb.com/docs/manual/administration/install-on-linux/)
 - **MacOS**: `brew install mongodb-community`
+
+### Neo4j
+
+This application uses Neo4j for the knowledge graph categorization. To set up Neo4j:
+
+1. **Install Neo4j Desktop**:
+   - Download from [Neo4j Download Page](https://neo4j.com/download/)
+   - Install and launch Neo4j Desktop
+
+2. **Create a Database**:
+   - Create a new project (or use an existing one)
+   - Click "Add Database" → "Create a Local Database"
+   - Set a name (e.g., "ChatbotKnowledgeGraph")
+   - Set a password (remember this for your .env file)
+   - Click "Create"
+
+3. **Start the Database**:
+   - Click "Start" on your newly created database
+   - Wait for the database to start (status will change to "Started")
+
+4. **Configure Connection**:
+   - Note the connection URI (default: `neo4j://localhost:7687`)
+   - Note the username (default: `neo4j`)
+   - Set the password in your `.env` file
 
 ### EasyOCR Dependencies
 
@@ -53,34 +78,62 @@ ollama pull llama3.2
    ```
    pip install -r requirements.txt
    ```
+4. Create a `.env` file with your configuration:
+   ```
+   MONGODB_URI=mongodb://localhost:27017/
+   NEO4J_URI=neo4j://localhost:7687
+   NEO4J_USER=neo4j
+   NEO4J_PASSWORD=your_password_here
+   ```
+
+## Setup Neo4j Knowledge Graph
+
+Before running the application, you should initialize the Neo4j knowledge graph schema:
+
+1. Make sure Neo4j is running
+2. Run the initialization script:
+   ```
+   python init_neo4j.py
+   ```
+3. To verify the Neo4j setup, run the test script:
+   ```
+   python test_neo4j.py
+   ```
+
+This creates the necessary node labels, relationships, and constraints for categorizing chat messages.
 
 ## Running the Application
 
 1. Make sure MongoDB is running
-2. Make sure Ollama is running with the llama3.2 model
-3. Start the application:
+2. Make sure Neo4j is running
+3. Make sure Ollama is running with the llama3.2 model
+4. Start the application:
    ```
    streamlit run app.py
    ```
-4. Access the application at http://localhost:8501
+5. Access the application at http://localhost:8501
 
 ## Configuration
 
-You can configure the MongoDB connection using environment variables:
-- Set `MONGODB_URI` to your MongoDB connection string (default: `mongodb://localhost:27017/`)
+You can configure the connections using environment variables:
+- Set `MONGODB_URI` to your MongoDB connection string
+- Set `NEO4J_URI`, `NEO4J_USER`, and `NEO4J_PASSWORD` for Neo4j connection
+
+## Troubleshooting Neo4j
+
+If you encounter Neo4j relationship errors:
+
+1. Check that Neo4j is running
+2. Make sure you've run the `init_neo4j.py` script to create the schema
+3. Verify your credentials in the `.env` file
+4. If errors persist, try clearing your database and running `test_neo4j.py`
+
+The knowledge graph requires specific relationship types (`BELONGS_TO` and `CATEGORIZED_UNDER`) to function correctly. The initialization script creates these relationships automatically.
 
 ## Usage
 
 1. Upload documents through the sidebar
 2. For images, EasyOCR will automatically extract text (first run may take longer as models download)
 3. Ask questions in the chat interface
-4. Select specific documents for targeted queries
-5. Create new chat sessions or browse previous conversations
-
-## Troubleshooting
-
-If OCR isn't working:
-- Check the console for detailed error messages
-- For GPU acceleration, verify your CUDA setup
-- If you encounter memory issues, try using smaller images or disable GPU in the code
-- The first run will download models and may be slow, subsequent runs will be faster 
+4. Select specific documents for targeted queries, or choose "None" for direct LLM queries
+5. Create new chat sessions or browse previous conversations 
