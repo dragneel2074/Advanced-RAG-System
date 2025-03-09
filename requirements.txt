@@ -9,4 +9,7 @@ python-dotenv
 uuid
 easyocr
 pillow
-neo4j 
+neo4j
+ollama-python
+requests 
+langchain-chroma
