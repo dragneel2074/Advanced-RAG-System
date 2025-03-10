@@ -1,6 +1,7 @@
 import traceback
+from pdftext.extraction import plain_text_output
 
-def plain_text_output(file_obj):
+def pdf_output(file_obj):
     """
     Extract plain text from a PDF file.
     
@@ -11,22 +12,22 @@ def plain_text_output(file_obj):
         str: Extracted text content
     """
     try:
-        from pdftext import PDF
         
         # Parse the PDF content
-        pdf = PDF(file_obj)
-        
-        # Extract text from all pages
-        text_content = ""
-        for page in pdf:
-            text_content += page.text + "\n\n"
+        pdf = plain_text_output(file_obj)
+        print("PDF:")
+        print(pdf)
+        # # Extract text from all pages
+        # text_content = ""
+        # for page in pdf:
+        #     text_content += page.text + "\n\n"
         
         # If no text was extracted, return an error message
-        if not text_content.strip():
+        if not pdf.strip():
             print("No text content found in the PDF file.")
             return ""
         
-        return text_content
+        return pdf
     except Exception as e:
         print(f"Error extracting text from PDF: {e}")
         traceback.print_exc()

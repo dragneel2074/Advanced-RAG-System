@@ -106,7 +106,7 @@ This creates the necessary node labels, relationships, and constraints for categ
 
 1. Make sure MongoDB is running
 2. Make sure Neo4j is running
-3. Make sure Ollama is running with the llama3.2 model
+3. Make sure Ollama is running with the llama3.2 and  all-minilm:latest model
 4. Start the application:
    ```
    streamlit run app.py

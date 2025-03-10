@@ -17,7 +17,6 @@ load_dotenv()
 # Set page configuration
 st.set_page_config(
     page_title="RAG Chatbot",
-    page_icon="🤖",
     layout="wide"
 )
 

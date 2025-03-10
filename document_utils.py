@@ -8,6 +8,8 @@ from langchain.schema import Document
 from langchain_chroma import Chroma
 import pandas as pd
 import traceback
+from langchain_ollama.embeddings import OllamaEmbeddings
+
 
 # Path for Chroma persistence
 PERSIST_DIRECTORY = os.path.join(os.getcwd(), "chroma_db")
@@ -15,14 +17,26 @@ PERSIST_DIRECTORY = os.path.join(os.getcwd(), "chroma_db")
 def initialize_vector_store():
     """Initialize Chroma vector store with persistence."""
     try:
-        vector_store = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=None)
+        embedding_function = OllamaEmbeddings(model="all-minilm:latest")
+        vector_store = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=embedding_function)
         print(f"Loaded existing Chroma vector store from {PERSIST_DIRECTORY}")
         return vector_store
     except Exception as e:
         print(f"Error loading Chroma vector store: {e}")
         # Create a new vector store if loading fails
-        vector_store = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=None)
-        vector_store.persist()
+        embedding_function = OllamaEmbeddings(model="all-minilm:latest")
+        vector_store = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=embedding_function)
+        
+        # Check if persist method exists before calling it (for compatibility with newer versions)
+        if hasattr(vector_store, 'persist'):
+            try:
+                vector_store.persist()
+                print("Explicitly called persist() on new vector store")
+            except Exception as e:
+                print(f"Note: Failed to call persist(), likely using newer Chroma version with auto-persistence: {e}")
+        else:
+            print("Using newer Chroma version with automatic persistence (no persist() method needed)")
+            
         print(f"Created new Chroma vector store at {PERSIST_DIRECTORY}")
         return vector_store
 
@@ -94,11 +108,21 @@ def process_text_document(content, file_name, file_type):
     
     # Add documents to the vector store
     st.session_state.vector_store.add_documents(documents)
-    # Explicitly persist after adding documents
-    st.session_state.vector_store.persist()
+    
+    # Check if persist method exists before calling it (for compatibility with newer versions)
+    if hasattr(st.session_state.vector_store, 'persist'):
+        try:
+            # Explicitly persist after adding documents (for older Chroma versions)
+            st.session_state.vector_store.persist()
+            print("Explicitly called persist() on vector store")
+        except Exception as e:
+            print(f"Note: Failed to call persist(), likely using newer Chroma version with auto-persistence: {e}")
+    else:
+        print("Using newer Chroma version with automatic persistence (no persist() method needed)")
+    
     # Record upload time for sorting
     st.session_state.document_upload_times[file_name] = datetime.now()
-    print(f"Added and persisted {len(documents)} documents to Chroma")
+    print(f"Added {len(documents)} documents to Chroma")
     
     return True, f"Document processed and indexed: {len(chunks)} chunks"
 
@@ -119,6 +143,17 @@ def delete_document(document_name):
             
         # Delete documents from vector store
         st.session_state.vector_store.delete(ids=ids_to_delete)
+        
+        # Check if persist method exists before calling it (for compatibility with newer versions)
+        if hasattr(st.session_state.vector_store, 'persist'):
+            try:
+                st.session_state.vector_store.persist()
+                print(f"Explicitly called persist() after deleting document: {document_name}")
+            except Exception as e:
+                print(f"Note: Failed to call persist() after deletion, likely using newer Chroma version: {e}")
+        else:
+            print(f"Using newer Chroma version with automatic persistence (no persist() method needed)")
+        
         # Remove from upload times tracking
         if document_name in st.session_state.document_upload_times:
             del st.session_state.document_upload_times[document_name]
@@ -208,7 +243,7 @@ def render_document_management_ui():
     
     if uploaded_files:
         from ocr_utils import extract_text_from_image
-        from pdf_utils import plain_text_output
+        from pdf_utils import pdf_output
         
         for uploaded_file in uploaded_files:
             st.write({
@@ -220,7 +255,7 @@ def render_document_management_ui():
             # Extract text content from uploaded file
             content = ""
             if uploaded_file.type == "application/pdf":
-                content = plain_text_output(uploaded_file)
+                content = pdf_output(uploaded_file)
                 print(f"Extracted text from PDF: {uploaded_file.name}")
             elif uploaded_file.type.startswith("image/"):
                 # Use OCR for image files
