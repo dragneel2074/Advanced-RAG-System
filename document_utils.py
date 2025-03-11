@@ -230,18 +230,23 @@ def retrieve_context(query, top_k=3, filter_document=None):
         return None
 
 def render_document_management_ui():
-    """Render the document management UI components."""
     st.header("Document Management")
     
-    # File uploader for documents
-    st.subheader("Upload Documents")
-    uploaded_files = st.file_uploader(
+    # Wrap file uploader in a container
+    uploader_container = st.empty()
+    uploaded_files = uploader_container.file_uploader(
         "Upload document files (PDF, TXT, or images)", 
-        type=["pdf", "txt", "jpg", "jpeg", "png"], 
-        accept_multiple_files=True
+        type=["pdf", "jpg", "jpeg", "png"], 
+        accept_multiple_files=False,
+        key="upload_files"
     )
     
     if uploaded_files:
+        # Normalize to list if a single file was uploaded
+        if not isinstance(uploaded_files, list):
+            print("Debug: Single file uploaded, converting to list")
+            uploaded_files = [uploaded_files]
+        
         from ocr_utils import extract_text_from_image
         from pdf_utils import pdf_output
         
@@ -258,85 +263,76 @@ def render_document_management_ui():
                 content = pdf_output(uploaded_file)
                 print(f"Extracted text from PDF: {uploaded_file.name}")
             elif uploaded_file.type.startswith("image/"):
-                # Use OCR for image files
-                with st.status("Performing OCR on image (this may take a moment)..."):
+                with st.spinner("Performing OCR on image (this may take a moment)..."):
                     content = extract_text_from_image(uploaded_file)
                     if content.startswith("Error"):
                         st.error(content)
                         content = ""
                     else:
                         st.success("OCR completed successfully!")
-                        # Show preview of extracted text
-                        with st.expander("Preview extracted text"):
-                            st.write(content[:500] + "..." if len(content) > 500 else content)
+                        st.write("Preview extracted text")
+                        st.write(content[:100] + "..." if len(content) > 500 else content)
                 print(f"Extracted text from image using OCR: {uploaded_file.name}")
             else:
-                # Assume it's a text file
                 file_bytes = uploaded_file.read()
                 try:
                     content = file_bytes.decode("utf-8")
                 except UnicodeDecodeError:
                     content = file_bytes.decode("latin1")
                 print(f"Extracted text from TXT: {uploaded_file.name}")
-        
-            # Process the content if it's available
+            
             if content:
-                with st.status("Processing document..."):
+                with st.spinner("Processing document..."):
                     success, message = process_text_document(
                         content, 
                         uploaded_file.name, 
                         uploaded_file.type
                     )
-                
                 if success:
                     st.success(message)
                 else:
                     st.warning(message)
             else:
                 st.warning("No content could be extracted from the file.")
+        
+        # Clear the uploader container to reset the widget
+        uploader_container.empty()
     
-    # Get available documents
+    # Continue with the rest of your UI...
     available_documents = get_available_documents()
-    # Add "None" as first option, then "All Documents", then individual documents
     doc_names = ["None", "All Documents"] + [doc[0] for doc in available_documents]
     
-    # Document Selection for Querying
     st.subheader("Select Document to Query")
     selected_document = st.selectbox(
         "Filter queries to specific document:",
         options=doc_names,
-        index=0,  # Default to "None" (direct LLM query)
+        index=0,
         help="Select 'None' to query the LLM directly without document context, 'All Documents' to search across everything, or a specific document"
     )
     
     if selected_document == "None":
         st.info("📝 LLM Direct Mode: Queries will be sent directly to the language model without document context.")
     elif selected_document != "All Documents":
-        # Show upload time for the selected document
         selected_doc_time = next((doc[1] for doc in available_documents if doc[0] == selected_document), None)
         if selected_doc_time:
             st.info(f"Queries will be limited to: {selected_document}\nUploaded: {selected_doc_time.strftime('%Y-%m-%d %H:%M:%S')}")
         else:
             st.info(f"Queries will be limited to: {selected_document}")
-
-    # Document Deletion section
+    
+    # Document deletion section remains the same
     st.subheader("Delete Document")
     try:
         if available_documents:
-            # Only show document names in the selection (not upload times)
             doc_sources = [doc[0] for doc in available_documents]
-            
             if doc_sources:
                 selected_doc_to_delete = st.selectbox(
                     "Select Document to Delete", 
                     options=doc_sources,
-                    key="delete_document_selector"  # Unique key to avoid conflict with query selector
+                    key="delete_document_selector"
                 )
-                # Show upload time for the document to be deleted
                 delete_doc_time = next((doc[1] for doc in available_documents if doc[0] == selected_doc_to_delete), None)
                 if delete_doc_time:
                     st.caption(f"Uploaded: {delete_doc_time.strftime('%Y-%m-%d %H:%M:%S')}")
-                    
                 if st.button("Delete Selected Document"):
                     success, message = delete_document(selected_doc_to_delete)
                     if success:
@@ -351,4 +347,4 @@ def render_document_management_ui():
         print(f"Error in document deletion section: {e}")
         traceback.print_exc()
         
-    return selected_document 
+    return selected_document
