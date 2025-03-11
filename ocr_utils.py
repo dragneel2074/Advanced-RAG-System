@@ -4,7 +4,6 @@ from PIL import Image
 import io
 import traceback
 
-@st.cache_resource
 def get_ocr_reader():
     """
     Initialize and cache the EasyOCR reader.

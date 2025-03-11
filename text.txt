@@ -1,0 +1,16 @@
+TODO:
+app.py
+1. Use .env
+2. Examine Each Functionality
+a. Chat With NO Context
+b. Chat with documents
+c. Chat with Issues (Neo4j)
+d. delete documents
+e. load chat history
+
+main.py
+check all three classification
+finetune
+rule based
+kmeans
+
