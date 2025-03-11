@@ -61,7 +61,9 @@ The chatbot uses Ollama for local LLM capabilities. [Install Ollama](https://oll
 
 ```
 ollama pull llama3.2
+ollama pull all-minilm:latest
 ```
+
 
 ## Installation
 
