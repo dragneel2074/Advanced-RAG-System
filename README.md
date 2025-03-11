@@ -1,4 +1,4 @@
-# RAG Chatbot with Document Indexing, OCR, and Knowledge Graph
+# Part 1: RAG Chatbot with Document Indexing, OCR, and Knowledge Graph
 
 This application provides a chat interface with Retrieval-Augmented Generation (RAG) capabilities, document management, OCR support for images, and a Neo4j knowledge graph for message categorization.
 
@@ -106,7 +106,7 @@ This creates the necessary node labels, relationships, and constraints for categ
 
 1. Make sure MongoDB is running
 2. Make sure Neo4j is running
-3. Make sure Ollama is running with the llama3.2 and  all-minilm:latest model
+3. Make sure Ollama is running with the llama3.2 and  all-minilm:latest model (Pull from ollama.com/models)
 4. Start the application:
    ```
    streamlit run app.py
@@ -137,3 +137,35 @@ The knowledge graph requires specific relationship types (`BELONGS_TO` and `CATE
 3. Ask questions in the chat interface
 4. Select specific documents for targeted queries, or choose "None" for direct LLM queries
 5. Create new chat sessions or browse previous conversations 
+
+#Part 2: Ticket Classification with Langchain Tools
+
+## Ticket Classification with Langchain Tools (main.py)
+
+This module provides a web interface and backend for classifying support tickets using multiple approaches:
+
+- **Fine-Tuned Classification**: Uses a pre-trained transformer model (via the `transformers` library) to classify support tickets. Selected and Finetuned "distilbert/distilbert-base-uncased" and saved the finetuned model in huggingface (Dragneel/ticket-classification-v1)
+- **Rule-Based Classification**: Utilizes keyword matching to determine the ticket category.
+- **Clustering-Based Classification**: Leverages a KMeans clustering model on sentence embeddings (extracted via `sentence-transformers` and normalized with `scikit-learn`) to predict ticket clusters.
+
+### Features
+
+- User-friendly UI built with Streamlit for inputting ticket text.
+- Integration with a fine-tuned text classification pipeline.
+- Rule-based and clustering-based alternatives for robust classification.
+- Detailed logging and debugging outputs for model performance.
+
+### Prerequisites
+
+- **Python Packages**: Install required packages including `streamlit`, `transformers`, `scikit-learn`, `sentence-transformers`, and `numpy`.
+- **Model Files**: Ensure that a KMeans model file (`kmeans_model.pkl`) is available for clustering-based classification.
+
+### Running the Application
+
+To start the ticket classification interface, run:
+
+```
+streamlit run main.py
+```
+
+The application will load the necessary models and display a UI for entering support ticket text and selecting a classification method.

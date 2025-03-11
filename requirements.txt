@@ -11,5 +11,9 @@ easyocr
 pillow
 neo4j
 ollama-python
-requests 
+requests
 langchain-chroma
+transformers
+scikit-learn
+sentence-transformers
+numpy
