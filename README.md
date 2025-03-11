@@ -169,3 +169,18 @@ streamlit run main.py
 ```
 
 The application will load the necessary models and display a UI for entering support ticket text and selecting a classification method.
+
+## Others:
+### Notebook(training.ipynb): 
+
+- Dataset is generated using Gemini API model
+- distilbert/distilbert-base-uncased is finetuned using the generated dataset and saved as Dragneel/ticket-classification-v1 in Huggingface.
+
+### Notebook(clustering.ipynb)
+
+- Generated Dataset is used for Clustering. Clustering algorithm used in Kmeans.
+- After training, the trained model is exported as pickle file for future use.
+
+
+
+
